@@ -43,6 +43,10 @@ public:
   // Return false if error
   bool Every(unsigned long milliseconds, void (*callback)());
 
+  // Start executing the callback every specified amount of milliseconds with ctx.
+  // Return false if error
+  bool Every(unsigned long milliseconds, void (*callback)(void*), void* ctx);
+
   // Stop calling the provided callback
   void Stop();
 
@@ -50,12 +54,29 @@ public:
   void Start();
   
 protected:
+  inline void invokeCallback(){
+    // choose between callback with or without context
+    if (m_hasContext){
+        (*ctxCallback)(m_ctx);
+    }else{
+        (*Callback)();
+    }
+  }
   // Callback reference
   void (*Callback)();
+
+  // Context Callback reference
+  void (*ctxCallback)(void*);
+
+  // Context for callback
+  void* m_ctx;
   
   // Flag to control callback execution
   bool m_running;
   
+  // Flag to choose which callback to use
+  bool m_hasContext;
+
   // Callback running period
   unsigned long m_milliseconds;
   

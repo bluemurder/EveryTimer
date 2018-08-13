@@ -33,11 +33,14 @@ EveryTimer::EveryTimer()
 {
   // At the first time, no callback is set so running is unabled.
   m_running = false;
+  m_hasContext =false;
   Callback = nullptr;
+  ctxCallback = nullptr;
   
   // Starting dummy values
   m_milliseconds = 0;
   m_lastRunTimestamp = 0;
+  m_ctx = NULL;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -58,7 +61,7 @@ void EveryTimer::Update()
   if((m_lastRunTimestamp == 0) ||
   ((now - m_lastRunTimestamp) >= m_milliseconds))
   {
-    (*Callback)();
+    invokeCallback();
     m_lastRunTimestamp = now;
     return;
   }
@@ -73,7 +76,7 @@ void EveryTimer::Update()
     // 2) current Update() method is called with a period smaller than m_milliseconds
     if((max - m_lastRunTimestamp - now) >= m_milliseconds)
     {
-      (*Callback)();
+      invokeCallback();
       m_lastRunTimestamp = now;
       return;
     }
@@ -97,6 +100,38 @@ bool EveryTimer::Every(unsigned long milliseconds, void (*callback)())
   // Save callback pointer
   Callback = callback;
   
+  // remember we choose to use callback without context
+  m_hasContext = false;
+
+  // Enable running state
+  m_running = true;
+
+  return true;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Start executing the callback every specified amount of milliseconds with context.
+// Return false if error
+bool EveryTimer::Every(unsigned long milliseconds, void (*callback)(void*), void* ctx)
+{
+  // Check that callback pointer is valid
+  if(callback == nullptr)
+  {
+    return false;
+  }
+
+  // store context
+  m_ctx=ctx;
+
+  // Set milliseconds
+  m_milliseconds = milliseconds;
+
+  // Save callback pointer
+  ctxCallback = callback;
+
+  // remember we choose to use callback with context
+  m_hasContext = true;
+
   // Enable running state
   m_running = true;
 
