@@ -25,28 +25,38 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
-#ifndef OneShot_Timer_Arduino_Library
-#define OneShot_Timer_Arduino_Library
-
 #include <EveryTimer.h>
 
-class OneShotTimer : protected EveryTimer
+#define LED_PIN 8
+#define PERIOD_MS 1000
+
+EveryTimer timer;
+bool active = true;
+
+//////////////////////////////////////////////////////////////////////////////
+// Setup routine
+void setup()
 {
-public:
-  // Default constructor
-  OneShotTimer();
-
-  // Update function to call in the loop() routine
-  void Update();
-
-  // Start immediately to wait for specified amount of milliseconds, 
-  // call the callback at timeout. Return false if error
-  bool OneShot(unsigned long milliseconds, void (*callback)());
+  // Connect an LED on pin 8
+  pinMode(LED_PIN, OUTPUT);
   
-  bool OneShot(unsigned long milliseconds, void (*callback)(void*), void* ctx);
+  // Call the callback every 1000 milliseconds
+  timer.Every(PERIOD_MS, action, &active);
+} 
 
-  // Stop calling the provided callback
-  void Stop();
-};
+//////////////////////////////////////////////////////////////////////////////
+// Main loop routine
+void loop()
+{
+  // Update method needed 
+  timer.Update();
+}
 
-#endif // OneShot_Timer_Arduino_Library
+//////////////////////////////////////////////////////////////////////////////
+// Callback called by timer
+void action(void *ctx)
+{
+  bool *active = (bool*)ctx;
+  digitalWrite(LED_PIN, *active ? HIGH : LOW);
+  *active = !*active; 
+}

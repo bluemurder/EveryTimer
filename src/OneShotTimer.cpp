@@ -50,7 +50,7 @@ void OneShotTimer::Update()
   // the specified timeout
   if(((now - m_lastRunTimestamp) >= m_milliseconds))
   {
-    (*Callback)();
+    invokeCallback();
     // Stop timer
     m_running = false;
     return;
@@ -66,7 +66,7 @@ void OneShotTimer::Update()
     // 2) current Update() method is called with a period smaller than m_milliseconds
     if((max - m_lastRunTimestamp - now) >= m_milliseconds)
     {
-      (*Callback)();
+      invokeCallback();
       // Stop timer
       m_running = false;
       return;
@@ -90,10 +90,45 @@ bool OneShotTimer::OneShot(unsigned long milliseconds, void (*callback)())
 
   // Save callback pointer
   Callback = callback;
-  
+
+  // remember we choose to use callback without context
+  m_hasContext = false;
+
   // Enable running state
   m_running = true;
-  
+
+  // Start immediately countdown
+  m_lastRunTimestamp = millis();
+
+  return true;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Start executing the callback every specified amount of milliseconds with context.
+// Return false if error
+bool OneShotTimer::OneShot(unsigned long milliseconds, void (*callback)(void*), void* ctx)
+{
+  // Check that callback pointer is valid
+  if(callback == nullptr)
+  {
+    return false;
+  }
+
+  // Set milliseconds
+  m_milliseconds = milliseconds;
+
+  // Save callback pointer
+  ctxCallback = callback;
+
+  // Save context
+  m_ctx = ctx;
+
+  // remember we choose to use callback with context
+  m_hasContext = true;
+
+  // Enable running state
+  m_running = true;
+
   // Start immediately countdown
   m_lastRunTimestamp = millis();
 
